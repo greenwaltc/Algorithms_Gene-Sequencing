@@ -91,20 +91,26 @@ class GeneSequencing:
 		for i in range(1, len_sequence2):
 			Table[0][i] = {
 				"cost": 5 * i,  # Because the cost of an insert / delete is 5
-				"back_ptr": []
+				"back_ptr": ["LEFT"]
 			}
 
 		# First column
 		for j in range(1, len_sequence1):
 			Table[j][0] = {
 				"cost": 5 * j,  # Because the cost of an insert / delete is 5
-				"back_ptr": []
+				"back_ptr": ["UPPER"]
 			}
+
+		# First Cell
+		Table[0][0] = {
+			"cost": 0,  # Because the cost of an insert / delete is 5
+			"back_ptr": []
+		}
 
 		"""Calculate all the costs and back pointers row-by-row"""
 
-		UPPER = 0
-		LEFT = 1
+		LEFT = 0
+		UPPER = 1
 		DIAG = 2
 
 		for i in range(1, len_sequence1):
@@ -127,8 +133,8 @@ class GeneSequencing:
 		""" Calculate the cost for left, upper, and diagonal neighbor """
 		costs = [None for i in range(3)]  # There are 3 costs to compute
 
-		costs[0] = Table[i-1][j]["cost"] + 5  # Cost of upper neighbor (cost of indel)  # TODO fixme
-		costs[1] = Table[i][j-1]["cost"] + 5  # Cost of left neighbor (cost of indel)
+		costs[0] = Table[i][j - 1]["cost"] + 5  # Cost of left neighbor (cost of indel)
+		costs[1] = Table[i-1][j]["cost"] + 5  # Cost of upper neighbor (cost of indel)
 		costs[2] = Table[i-1][j-1]["cost"] + self.diff(i, j, seq1, seq2)  # Cost of diag neighbor (-3 if char match, else 1)
 
 		"""Find minimum cost"""
