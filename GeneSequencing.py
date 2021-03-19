@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 from which_pyqt import PYQT_VER
-from enum import Enum
 if PYQT_VER == 'PYQT5':
 	from PyQt5.QtCore import QLineF, QPointF
 elif PYQT_VER == 'PYQT4':
