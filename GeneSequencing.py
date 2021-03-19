@@ -138,6 +138,7 @@ class GeneSequencing:
 			if costs[i] < minCost:
 				minCosts = []  # New minimum found, reset the array of pointers
 				minCosts.append(i)  # Add the new minimum
+				minCost = costs[i]
 			elif costs[i] == minCost:
 				minCosts.append(i)
 
