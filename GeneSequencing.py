@@ -45,9 +45,9 @@ class GeneSequencing:
 ###################################################################################################
 # your code should replace these three statements and populate the three variables: score, alignment1 and alignment2
 		score = self.alignHelper(seq1, seq2, banded)
-		alignment1 = 'abc-easy  DEBUG:({} chars,align_len={}{})'.format(
+		alignment1 = '{}  DEBUG:({} chars,align_len={}{})'.format('test1',
 			len(seq1), align_length, ',BANDED' if banded else '')
-		alignment2 = 'as-123--  DEBUG:({} chars,align_len={}{})'.format(
+		alignment2 = '{}  DEBUG:({} chars,align_len={}{})'.format('test2',
 			len(seq2), align_length, ',BANDED' if banded else '')
 ###################################################################################################					
 		
@@ -75,84 +75,59 @@ class GeneSequencing:
 
 	def alignMeaty(self, seq1, seq2):
 
-		# """Set Up Conditions for Band"""
-		# bandDistance = float('inf')
-		# if self.banded is True:
-		# 	bandDistance = 3
-
 		""" Initialize the table for memoization """
 		len_sequence1 = len(seq1)  # This will be the "top" word in the table
 		len_sequence2 = len(seq2)  # This will be the "bottom" word in the table
-		Table = [[{"cost": None, "back_ptr": []} for i in range(len_sequence2)] for j in range(len_sequence1)]
+		self.Table = [[{"cost": None, "back_ptr": None} for i in range(len_sequence2)] for j in range(len_sequence1)]
 
 		""" Initialize first row and first column of the table """
 
 		# First row
 		for i in range(1, len_sequence2):
-			Table[0][i] = {
+			self.Table[0][i] = {
 				"cost": 5 * i,  # Because the cost of an insert / delete is 5
-				"back_ptr": ["LEFT"]
+				"back_ptr": "LEFT"
 			}
 
 		# First column
 		for j in range(1, len_sequence1):
-			Table[j][0] = {
+			self.Table[j][0] = {
 				"cost": 5 * j,  # Because the cost of an insert / delete is 5
-				"back_ptr": ["UPPER"]
+				"back_ptr": "UPPER"
 			}
 
 		# First Cell
-		Table[0][0] = {
+		self.Table[0][0] = {
 			"cost": 0,  # Because the cost of an insert / delete is 5
-			"back_ptr": []
+			"back_ptr": None
 		}
 
 		"""Calculate all the costs and back pointers row-by-row"""
-
-		LEFT = 0
-		UPPER = 1
-		DIAG = 2
-
 		for i in range(1, len_sequence1):
 			for j in range(1, len_sequence2):
-				minCost, minCosts = self.minNeighborCosts(i, j, seq1, seq2, Table)  # Sets up an array of the costs for neighbors so min can be found
-				Table[i][j]["cost"] = minCost
+				minCost, backPtr = self.minNeighborCosts(i, j, seq1, seq2)  # Sets up an array of the costs for neighbors so min can be found
+				self.Table[i][j]["cost"] = minCost
+				self.Table[i][j]["back_ptr"] = backPtr
 
-				# Add the minimum cost(s) as back pointers to the cell in the Table
-				for k in range(len(minCosts)):
-					if minCosts[k] == LEFT:
-						Table[i][j]["back_ptr"].append("LEFT")
-					elif minCosts[k] == UPPER:
-						Table[i][j]["back_ptr"].append("UPPER")
-					elif minCosts[k] == DIAG:
-						Table[i][j]["back_ptr"].append("DIAG")
+		return self.Table[len_sequence1-1][len_sequence2-1]["cost"]
 
-		return Table[len_sequence1-1][len_sequence2-1]["cost"]
-
-	def minNeighborCosts(self, i, j, seq1, seq2, Table):
+	def minNeighborCosts(self, i, j, seq1, seq2):
 		""" Calculate the cost for left, upper, and diagonal neighbor """
-		costs = [None for i in range(3)]  # There are 3 costs to compute
 
-		costs[0] = Table[i][j - 1]["cost"] + 5  # Cost of left neighbor (cost of indel)
-		costs[1] = Table[i-1][j]["cost"] + 5  # Cost of upper neighbor (cost of indel)
-		costs[2] = Table[i-1][j-1]["cost"] + self.diff(i, j, seq1, seq2)  # Cost of diag neighbor (-3 if char match, else 1)
+		# Since the tie breaker rule is always true, there only ever needs to be one back pointer: the minimum
+		# of the first LEFT, UPPER, or DIAG
+		cost = self.Table[i][j - 1]["cost"] + 5  # Cost of left neighbor (cost of indel)
+		back_ptr = "LEFT"
 
-		"""Find minimum cost"""
-		minCost = float('inf')
-		minCosts = []  # Holds the indexes for the minimum costs
-						# Index 0 is left neighbor
-						# Index 1 is upper neighbor
-						# Index 2 is diag neighbor
+		if self.Table[i-1][j]["cost"] + 5 < cost:
+			cost = self.Table[i-1][j]["cost"] + 5
+			back_ptr = "UPPER"
 
-		for i in range(3):
-			if costs[i] < minCost:
-				minCosts = []  # New minimum found, reset the array of pointers
-				minCosts.append(i)  # Add the new minimum
-				minCost = costs[i]
-			elif costs[i] == minCost:
-				minCosts.append(i)
+		if self.Table[i-1][j-1]["cost"] + self.diff(i, j, seq1, seq2) < cost:
+			cost = self.Table[i-1][j-1]["cost"] + self.diff(i, j, seq1, seq2)
+			back_ptr = "DIAG"
 
-		return costs[minCosts[0]], minCosts
+		return cost, back_ptr
 
 	def diff(self, i, j, seq1, seq2):
 		if seq2[j] == seq1[i]:
