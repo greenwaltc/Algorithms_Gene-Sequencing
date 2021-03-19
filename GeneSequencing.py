@@ -131,6 +131,7 @@ class GeneSequencing:
 				minCosts.append(i)  # Add the new minimum
 			elif costs[i] == minCost:
 				minCosts.append(i)
+				# pass
 
 		return costs[minCosts[0]], minCosts
 
