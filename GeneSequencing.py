@@ -68,18 +68,23 @@ class GeneSequencing:
 		if banded:
 			return self.alignBanded(seq1, seq2)
 
-		return self.alignNoBand(seq1, seq2)
+		return self.alignMeaty(seq1, seq2)
 
 
 	def alignBanded(self, seq1, seq2):
 		return -1
 
-	def alignNoBand(self, seq1, seq2):
+	def alignMeaty(self, seq1, seq2):
+
+		# """Set Up Conditions for Band"""
+		# bandDistance = float('inf')
+		# if self.banded is True:
+		# 	bandDistance = 3
 
 		""" Initialize the table for memoization """
 		len_sequence1 = len(seq1)  # This will be the "top" word in the table
 		len_sequence2 = len(seq2)  # This will be the "bottom" word in the table
-		Table = [[{"cost": 0, "back_ptr": []} for i in range(len_sequence2)] for j in range(len_sequence1)]
+		Table = [[{"cost": None, "back_ptr": []} for i in range(len_sequence2)] for j in range(len_sequence1)]
 
 		""" Initialize first row and first column of the table """
 
