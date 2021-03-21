@@ -61,11 +61,13 @@ class GeneSequencing:
 		seq1 = " " + seq1
 		seq2 = " " + seq2
 
-		# seq1 = " AGCATGC"
+		seq1 = " ACAATCC"
+		seq2 = " AGCATGC"
 
 		# Else begin the algorithm for finding cost to align
 		if banded:
-			return self.alignBanded(seq1, seq2)
+			cost, seq1Alignment, seq2Alignment = self.alignBanded(seq1, seq2)
+			return cost, seq1Alignment, seq2Alignment
 
 		cost, seq1Alignment, seq2Alignment = self.alignMeaty(seq1, seq2)
 		return cost, seq1Alignment, seq2Alignment
@@ -81,17 +83,83 @@ class GeneSequencing:
 		d = 3
 		k = 7
 		# Our offset is -d + i, where i is the row index in the table
-		i = 0  # Column index
-		j = 0  # Row index
 
-		self.Table = [[{"cost": None, "back_ptr": None} for i in range(len_sequence2)] for j in range(k)]
+		self.Table = [[{"cost": None, "back_ptr": None} for j in range(k)] for i in range(len_sequence1)]
 
 		"""Initialize first row and column of the table"""
+		# First row
+		for k_j in range(k):
+			offset = -d + 0
+			if k_j + offset < 0:
+				self.Table[0][k_j] = {
+					"cost": None,
+					"back_ptr": None
+				}
 
-		# First row until the length of the band has been hit
-		offset = -d + i
+			else:
+				self.Table[0][k_j] = {
+					"cost": 5 * (k_j + offset),
+					"back_ptr": None if (k_j + offset) == 0 else "LEFT"
+				}
 
-		return -1
+		# First Column
+		for k_i in range(1, d + 1):
+			index = 3 - k_i
+			self.Table[k_i][index] = {
+				"cost": 5 * k_i,
+				"back_ptr": "UPPER"
+			}
+
+		"""Calculate all min neighbor costs"""
+		# For banded, left neighbor is (i, j - 1), upper is (i - 1, j + 1), diagonal is (i - 1, j)
+		for i in range(1, len_sequence1):
+			offset = -d + i
+			for j in range(k):
+				if (j + offset) <= 0 or (j + offset) > len_sequence2 - 1:
+					continue
+				else:
+					self.minNeighborCosts_banded(i, j, offset, seq1, seq2)
+
+		"""Get the minimum cost from the last row"""
+		j = 6
+		cost = float('inf')
+		while self.Table[len_sequence1 - 1][j]["cost"] == None:
+			j -= 1
+
+		cost = self.Table[len_sequence1 - 1][j]["cost"]
+		return cost, "sequence1", "sequence2"
+
+	def minNeighborCosts_banded(self, i, j, offset, seq1, seq2):
+		cost = float('inf')
+		back_ptr = None
+
+		# Left
+		if i >= 0 and (j - 1) < 7 \
+			and self.Table[i][j - 1]["cost"] != None:
+			cost = self.Table[i][j - 1]["cost"] + 5
+			back_ptr = "LEFT"
+
+		# Upper
+		if (i - 1) >= 0 and (j + 1) < 7 \
+				and self.Table[i - 1][j + 1]["cost"] != None \
+				and self.Table[i - 1][j + 1]["cost"] + 5 < cost:
+			cost = self.Table[i - 1][j + 1]["cost"] + 5
+			back_ptr = "UPPER"
+
+		# Diagonal
+		if (i - 1) >= 0 and j < 7 \
+			and self.Table[i - 1][j]["cost"] != None \
+			and (self.Table[i - 1][j]["cost"] + self.diff_banded(i, j, offset, seq1, seq2)) < cost:
+			cost = self.Table[i - 1][j]["cost"] + self.diff_banded(i, j, offset, seq1, seq2)
+			back_ptr = "DIAG"
+
+		self.Table[i][j]["cost"] = cost
+		self.Table[i][j]["back_ptr"] = back_ptr
+
+	def diff_banded(self, i, j, offset, seq1, seq2):
+		if seq2[j + offset] == seq1[i]:
+			return -3
+		return 1
 
 	def alignMeaty(self, seq1, seq2):
 
