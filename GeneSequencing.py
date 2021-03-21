@@ -20,11 +20,6 @@ MATCH = -3
 INDEL = 5
 SUB = 1
 
-# Neighbor Types
-UPPER = 0
-LEFT = 1
-DIAGONAL = 2
-
 class GeneSequencing:
 
 	def __init__( self ):
