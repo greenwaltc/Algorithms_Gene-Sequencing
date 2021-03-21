@@ -61,11 +61,10 @@ class GeneSequencing:
 		seq1 = " " + seq1
 		seq2 = " " + seq2
 
-		seq1 = " ACAATCC"
-		seq2 = " AGCATGC"
-
 		# Else begin the algorithm for finding cost to align
 		if banded:
+			if abs(len(seq1) - len(seq2)) > 100:  # An arbitrary cutoff for no valid solution
+				return math.inf, "No Alignment Possible", "No Alignment Possible"
 			cost, seq1Alignment, seq2Alignment = self.alignBanded(seq1, seq2)
 			return cost, seq1Alignment, seq2Alignment
 
@@ -127,7 +126,35 @@ class GeneSequencing:
 			j -= 1
 
 		cost = self.Table[len_sequence1 - 1][j]["cost"]
-		return cost, "sequence1", "sequence2"
+		alignmentExits, seq1Alignment, seq2Alignment = self.makeAlignments_banded(seq1, seq2, i, j, d)
+		return cost, seq1Alignment, seq2Alignment
+
+	def makeAlignments_banded(self, seq1, seq2, i, j, d):
+		seq1Alignment = seq1
+		seq2Alignment = seq2
+		alignmentExists = True
+
+		while True:
+			offset = -d + i
+			if i > 0 and j > 2 and self.Table[i][j]["back_ptr"] is None:
+				alignmentExists = False
+				break
+			elif i == 0 and j == 3:
+				break
+			else:
+				if self.Table[i][j]["back_ptr"] == "DIAG":
+					i -= 1
+					continue
+				elif self.Table[i][j]["back_ptr"] == "LEFT":
+					seq1Alignment = seq1Alignment[:i+1] + "-" + seq1Alignment[i+1:]
+					j -= 1
+					continue
+				elif self.Table[i][j]["back_ptr"] == "UPPER":
+					seq2Alignment = seq2Alignment[:j+1+offset] + "-" + seq2Alignment[j+1+offset:]
+					i -= 1
+					j += 1
+		return alignmentExists, seq1Alignment[1:], seq2Alignment[1:]
+
 
 	def minNeighborCosts_banded(self, i, j, offset, seq1, seq2):
 		cost = float('inf')
