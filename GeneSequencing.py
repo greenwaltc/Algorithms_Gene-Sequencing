@@ -158,14 +158,14 @@ class GeneSequencing:
 		# Left
 		if i >= 0 and (j - 1) < 7 \
 			and self.Table[i][j - 1]["cost"] != None:
-			cost = self.Table[i][j - 1]["cost"] + 5
+			cost = self.Table[i][j - 1]["cost"] + INDEL
 			back_ptr = "LEFT"
 
 		# Upper
 		if (i - 1) >= 0 and (j + 1) < 7 \
 				and self.Table[i - 1][j + 1]["cost"] != None \
-				and self.Table[i - 1][j + 1]["cost"] + 5 < cost:
-			cost = self.Table[i - 1][j + 1]["cost"] + 5
+				and self.Table[i - 1][j + 1]["cost"] + INDEL < cost:
+			cost = self.Table[i - 1][j + 1]["cost"] + INDEL
 			back_ptr = "UPPER"
 
 		# Diagonal
